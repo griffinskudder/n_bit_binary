@@ -78,14 +78,14 @@ class NBitInteger:
     def signed(self, value):
         value = bool(value)
         if value:
-            max = 2 ** self.bits // 2 - 1
-            min = self._max * -1 + 1
+            temp_max = 2 ** self.bits // 2 - 1
+            temp_min = self._max * -1 + 1
         else:
-            max = 2 ** self.bits - 1
-            min = 0
-        if self.number > max:
+            temp_max = 2 ** self.bits - 1
+            temp_min = 0
+        if self.number > temp_max:
             raise OverflowError
-        elif self.number < min:
+        elif self.number < temp_min:
             raise OverflowError
         self._signed = value
 
@@ -110,7 +110,7 @@ class NBitInteger:
         else:
             if self.number > self._max:
                 raise OverflowError
-            elif self.number < self.min:
+            elif self.number < self._min:
                 raise OverflowError
 
     def _clear_bit(self, offset):
@@ -134,7 +134,7 @@ class NBitInteger:
         else:
             if self.number > self._max:
                 raise OverflowError
-            elif self.number < self.min:
+            elif self.number < self._min:
                 raise OverflowError
 
     def append(self, value):
