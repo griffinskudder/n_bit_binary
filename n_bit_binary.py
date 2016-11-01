@@ -9,7 +9,7 @@ Email: gskudder@vectorsystems.co.nz
 class NBitInteger:
     """
     An n-bit two's complement binary integer type.
-    Use slicing syntax to modify individual _bits. Index 0 is the least significant bit.
+    Use slicing syntax to modify individual _bits. Index 0 is the most significant bit.
     Slicing with negative numbers is supported. However as the integer has a fixed length I can't see a use-case.
     Where a string representation is needed a base-10 number will be given.
     Changing the integer being represented via properties is also possible. Assign an integer to self.number to do this.
@@ -19,23 +19,38 @@ class NBitInteger:
     For example:
     n = NBitInteger(5, 16)
     # n can now be represented as 0000000000000101 or 5
-    n[15] = True
+    n[0] = True
     # n can now be represented as 1000000000000101 or -32763
-    n[0] = False
+    n[15] = False
     # n can now be represented as 1000000000000100 or -32764
-    n[-1] = False
-    # n can now be represented as 0000000000000100 or 4
+    n[-1] = True
+    # n can now be represented as 1000000000000101 or -32763
     n.number = 6
     # n can now be represented as 0000000000000110 or 6
     n.bits = 8
     # n can now be represented as 00000110 or 6
+    An NBitInteger cannot have a length of zero. This applies to slicing as well. Therefore the slice [12:6] is invalid
+    and will throw a ValueError. However, a slice of [12:6:-1] is valid and will reverse the bits.
+    The methods append and prepend are available.
     """
 
-    def __init__(self, number, bits):
-        self.number = int(number)
+    def __init__(self, number, bits, signed=True):
+        self._signed = bool(signed)
+        if bits <= 0:
+            raise ValueError("Bits must be greater than zero.")
         self._bits = bits
-        self._max = 2 ** self.bits // 2 - 1
-        self._min = self._max * -1 + 1
+        if self._signed:
+            self._max = 2 ** self.bits // 2 - 1
+            self._min = self._max * -1 + 1
+        else:
+            self._max = 2 ** self.bits - 1
+            self._min = 0
+        number = int(number)
+        if number > self._max:
+            raise OverflowError
+        elif number < self._min:
+            raise OverflowError
+        self.number = number
 
     @property
     def bits(self):
@@ -47,9 +62,32 @@ class NBitInteger:
         if value <= 0:
             raise ValueError("Bits must be greater zero.")
         self._bits = value
-        self._max = 2 ** self.bits // 2 - 1
-        self._min = self._max * -1 + 1
+        if self._signed:
+            self._max = 2 ** self.bits // 2 - 1
+            self._min = self._max * -1 + 1
+        else:
+            self._max = 2 ** self.bits - 1
+            self._min = 0
         self.number = int(self.bit_string(), 2)
+
+    @property
+    def signed(self):
+        return self._signed
+
+    @signed.setter
+    def signed(self, value):
+        value = bool(value)
+        if value:
+            max = 2 ** self.bits // 2 - 1
+            min = self._max * -1 + 1
+        else:
+            max = 2 ** self.bits - 1
+            min = 0
+        if self.number > max:
+            raise OverflowError
+        elif self.number < min:
+            raise OverflowError
+        self._signed = value
 
     def _set_bit(self, offset):
         """
@@ -64,10 +102,16 @@ class NBitInteger:
             raise IndexError
         mask = 1 << offset
         self.number |= mask
-        if self.number > self._max:
-            self.number -= 2 ** self.bits
-        elif self.number < self._min:
-            self.number += 2 ** self.bits
+        if self._signed:
+            if self.number > self._max:
+                self.number -= 2 ** self.bits
+            elif self.number < self._min:
+                self.number += 2 ** self.bits
+        else:
+            if self.number > self._max:
+                raise OverflowError
+            elif self.number < self.min:
+                raise OverflowError
 
     def _clear_bit(self, offset):
         """
@@ -82,10 +126,41 @@ class NBitInteger:
             raise IndexError
         mask = ~(1 << offset)
         self.number &= mask
-        if self.number > self._max:
-            self.number -= 2 ** self.bits
-        elif self.number < self._min:
-            self.number += 2 ** self.bits
+        if self._signed:
+            if self.number > self._max:
+                self.number -= 2 ** self.bits
+            elif self.number < self._min:
+                self.number += 2 ** self.bits
+        else:
+            if self.number > self._max:
+                raise OverflowError
+            elif self.number < self.min:
+                raise OverflowError
+
+    def append(self, value):
+        """
+        Append a new least-significant bit to the integer.
+        :param value:
+        :return:
+        """
+        self.bits += 1
+        self.number <<= 1
+        if value:
+            self._set_bit(0)
+        else:
+            self._clear_bit(0)
+
+    def prepend(self, value):
+        """
+        Prepend a new most-significant bit to the integer.
+        :param value:
+        :return:
+        """
+        self.bits += 1
+        if value:
+            self._set_bit(self.bits - 1)
+        else:
+            self._clear_bit(self.bits - 1)
 
     def bit_string(self):
         """
@@ -100,69 +175,59 @@ class NBitInteger:
         return self.bits
 
     def __getitem__(self, key):
-        if not isinstance(key, int) and not isinstance(key, slice):
-            raise ValueError
         if isinstance(key, slice):
-            if key.step is None:
-                key = range(key.start, key.stop)
-            else:
-                key = range(key.start, key.stop, key.step)
-        else:
+            range_tuple = key.indices(self.bits)
+            key = range(range_tuple[0], range_tuple[1], range_tuple[2])
+        elif isinstance(key, int):
             key = range(key, key + 1)
-        if key.start < 0:
-            if self.bits - key.start < 0:
-                raise IndexError
-        if key.start > self.bits - 1:
+        else:
+            raise ValueError
+
+        if len(key) < 1:
+            raise ValueError("This slice {key} would return an integer with 0 bits.".format(key=str(key)))
+
+        if (key.start < 0 and self.bits - key.start < 0) or (key.start > self.bits - 1) or \
+                (key.stop < 0 and self.bits - key.stop < 0) or key.stop > self.bits:
             raise IndexError
-        elif key.stop < 0:
-            if self.bits - key.stop < 0:
-                raise IndexError
-        if key.stop > self.bits:
-            raise IndexError
-        new_number = NBitInteger(0, self.bits)
+
+        return_value = NBitInteger(0, 1)
+        first_run = True
         for i in key:
             if i < 0:
                 i += self.bits
-            if i > (self.bits - 1) or i < 0:
-                raise IndexError
-            mask = 1 << i
-            if self.number & mask:
-                new_number._set_bit(i)
+            mask = 1 << self.bits - 1 - i
+            # By performing a bitwise AND operation on this mask and a number we can determine if the bit at offset
+            # i is True or False
+            if first_run:
+                if self.number & mask:
+                    return_value._set_bit(0)
+                first_run = False
+            elif self.number & mask:
+                return_value.append(True)
             else:
-                new_number._clear_bit(i)
-        return new_number
+                return_value.append(False)
+        return return_value
 
     def __setitem__(self, key, value):
-        if not isinstance(key, int) and not isinstance(key, slice):
-            raise ValueError
         if isinstance(key, slice):
-            if key.step is not None and key.stop > key.start:
-                key = range(key.start, key.stop, key.step)
-            elif key.step is None and key.stop > key.start:
-                key = range(key.start, key.stop)
-            else:
-                key = range(key.start, key.stop, -1)
-        else:
+            range_tuple = key.indices(self.bits)
+            key = range(range_tuple[0], range_tuple[1], range_tuple[2])
+        elif isinstance(key, int):
             key = range(key, key + 1)
-        if key.start < 0:
-            if self.bits - key.start < 0:
-                raise IndexError
-        if key.start > self.bits - 1:
+        else:
+            raise ValueError
+
+        if (key.start < 0 and self.bits - key.start < 0) or (key.start > self.bits - 1) or \
+                (key.stop < 0 and self.bits - key.stop < 0) or key.stop > self.bits:
             raise IndexError
-        elif key.stop < 0:
-            if self.bits - key.stop < 0:
-                raise IndexError
-        if key.stop > self.bits:
-            raise IndexError
+
         for i in key:
             if i < 0:
                 i += self.bits
-            if i > (self.bits - 1) or i < 0:
-                raise IndexError
-            if bool(value):
-                self._set_bit(i)
+            if value:
+                self._set_bit(self.bits - 1 - i)
             else:
-                self._clear_bit(i)
+                self._clear_bit(self.bits - 1 - i)
 
     def __index__(self):
         return self.number
@@ -175,3 +240,6 @@ class NBitInteger:
 
     def __int__(self):
         return self.number
+
+    def __bool__(self):
+        return bool(self.number)
