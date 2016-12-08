@@ -255,3 +255,18 @@ class NBitInteger:
 
     def __bool__(self):
         return bool(self.number)
+
+    def __lt__(self, value):
+        return self.number < value
+
+    def __gt__(self, value):
+        return self.number > value
+
+    def __le__(self, value):
+        return self.number <= value
+
+    def __ge__(self, value):
+        return self.number >= value
+
+    def __eq__(self, value):
+        return self.number == value
