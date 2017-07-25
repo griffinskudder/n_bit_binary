@@ -215,9 +215,9 @@ class NBitInteger:
                     return_value._set_bit(0)
                 first_run = False
             elif self.number & mask:
-                return_value.append(True)
+                return_value.append(1)
             else:
-                return_value.append(False)
+                return_value.append(0)
         return return_value
 
     def __setitem__(self, key, value):
@@ -270,3 +270,25 @@ class NBitInteger:
 
     def __eq__(self, value):
         return self.number == value
+
+    def __add__(self, other):
+        return self.number + other
+
+    def __sub__(self, other):
+        return self.number - other
+
+    def __mul__(self, other):
+        return self.number * other
+
+    def __floordiv__(self, other):
+        return self.number // other
+
+    def __truediv__(self, other):
+        return self.number / other
+
+    def __mod__(self, other):
+        return self.number % other
+
+    def __pow__(self, power, modulo=None):
+        # TODO: Implement this
+        raise NotImplemented
