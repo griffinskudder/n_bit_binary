@@ -62,7 +62,20 @@ class NBitInteger:
             raise OverflowError
         elif number < self._min:
             raise OverflowError
-        self.number = number
+        self._number = number
+
+    @property
+    def number(self):
+        return self._number
+
+    @number.setter
+    def number(self, value):
+        int(value)
+        if value > self._max:
+            raise OverflowError
+        elif value < self._min:
+            raise OverflowError
+        self._number = value
 
     @property
     def bits(self):
@@ -80,7 +93,7 @@ class NBitInteger:
         else:
             self._max = 2 ** self.bits - 1
             self._min = 0
-        self.number = int(self.bit_string(), 2)
+        self._number = int(self.bit_string(), 2)
 
     @property
     def signed(self):
@@ -95,9 +108,9 @@ class NBitInteger:
         else:
             temp_max = 2 ** self.bits - 1
             temp_min = 0
-        if self.number > temp_max:
+        if self._number > temp_max:
             raise OverflowError
-        elif self.number < temp_min:
+        elif self._number < temp_min:
             raise OverflowError
         self._signed = value
 
@@ -113,16 +126,16 @@ class NBitInteger:
         if offset > (self.bits - 1) or offset < 0:
             raise IndexError
         mask = 1 << offset
-        self.number |= mask
+        self._number |= mask
         if self._signed:
-            if self.number > self._max:
-                self.number -= 2 ** self.bits
-            elif self.number < self._min:
-                self.number += 2 ** self.bits
+            if self._number > self._max:
+                self._number -= 2 ** self.bits
+            elif self._number < self._min:
+                self._number += 2 ** self.bits
         else:
-            if self.number > self._max:
+            if self._number > self._max:
                 raise OverflowError
-            elif self.number < self._min:
+            elif self._number < self._min:
                 raise OverflowError
 
     def _clear_bit(self, offset):
@@ -137,16 +150,16 @@ class NBitInteger:
         if offset > (self.bits - 1) or offset < 0:
             raise IndexError
         mask = ~(1 << offset)
-        self.number &= mask
+        self._number &= mask
         if self._signed:
-            if self.number > self._max:
-                self.number -= 2 ** self.bits
-            elif self.number < self._min:
-                self.number += 2 ** self.bits
+            if self._number > self._max:
+                self._number -= 2 ** self.bits
+            elif self._number < self._min:
+                self._number += 2 ** self.bits
         else:
-            if self.number > self._max:
+            if self._number > self._max:
                 raise OverflowError
-            elif self.number < self._min:
+            elif self._number < self._min:
                 raise OverflowError
 
     def append(self, value):
@@ -156,7 +169,7 @@ class NBitInteger:
         :return:
         """
         self.bits += 1
-        self.number <<= 1
+        self._number <<= 1
         if value:
             self._set_bit(0)
         else:
@@ -180,7 +193,7 @@ class NBitInteger:
         """
         s = ""
         for i in reversed(range(self.bits)):
-            s += str(int(bool(self.number & (1 << i))))
+            s += str(int(bool(self._number & (1 << i))))
         return s
 
     def __len__(self):
@@ -211,10 +224,10 @@ class NBitInteger:
             # By performing a bitwise AND operation on this mask and a number we can determine if the bit at offset
             # i is True or False
             if first_run:
-                if self.number & mask:
+                if self._number & mask:
                     return_value._set_bit(0)
                 first_run = False
-            elif self.number & mask:
+            elif self._number & mask:
                 return_value.append(1)
             else:
                 return_value.append(0)
@@ -242,34 +255,34 @@ class NBitInteger:
                 self._clear_bit(self.bits - 1 - i)
 
     def __index__(self):
-        return self.number
+        return self._number
 
     def __str__(self):
-        return str(self.number)
+        return str(self._number)
 
     def __repr__(self):
-        return "NBitInteger(" + str(self.number) + ", " + str(self.bits) + ")"
+        return "NBitInteger(" + str(self._number) + ", " + str(self.bits) + ")"
 
     def __int__(self):
-        return self.number
+        return self._number
 
     def __bool__(self):
-        return bool(self.number)
+        return bool(self._number)
 
     def __lt__(self, value):
-        return self.number < value
+        return self._number < value
 
     def __gt__(self, value):
-        return self.number > value
+        return self._number > value
 
     def __le__(self, value):
-        return self.number <= value
+        return self._number <= value
 
     def __ge__(self, value):
-        return self.number >= value
+        return self._number >= value
 
     def __eq__(self, value):
-        return self.number == value
+        return self._number == value
 
     def __add__(self, other):
         return self.number + other
