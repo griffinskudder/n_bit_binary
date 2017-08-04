@@ -17,8 +17,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import sys
 
-class NBitInteger:
+if sys.version_info.minor < 5:
+    SupportsInt = object
+else:
+    from typing import SupportsInt
+
+
+class NBitInteger(SupportsInt):
     """
     An n-bit two's complement binary integer type.
     Use slicing syntax to modify individual _bits. Index 0 is the most significant bit.
