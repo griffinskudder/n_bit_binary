@@ -309,6 +309,5 @@ class NBitInteger(SupportsInt):
     def __mod__(self, other):
         return self.number % other
 
-    def __pow__(self, power, modulo=None):
-        # TODO: Implement this
-        raise NotImplemented
+    def __pow__(self, power):
+        return self.number ** power
