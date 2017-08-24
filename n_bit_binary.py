@@ -292,22 +292,95 @@ class NBitInteger(SupportsInt):
         return self._number == value
 
     def __add__(self, other):
-        return self.number + other
+        return NBitInteger(self.number + other, signed=self.signed, bits=self.bits)
 
     def __sub__(self, other):
-        return self.number - other
+        return NBitInteger(self.number - other, signed=self.signed, bits=self.bits)
 
     def __mul__(self, other):
-        return self.number * other
+        return NBitInteger(self.number * other, signed=self.signed, bits=self.bits)
 
     def __floordiv__(self, other):
-        return self.number // other
+        return NBitInteger(self.number // other, signed=self.signed, bits=self.bits)
 
     def __truediv__(self, other):
-        return self.number / other
+        return NBitInteger(self.number / other, signed=self.signed, bits=self.bits)
 
     def __mod__(self, other):
-        return self.number % other
+        return NBitInteger(self.number % other, signed=self.signed, bits=self.bits)
 
     def __pow__(self, power):
-        return self.number ** power
+        return NBitInteger(self.number ** power, signed=self.signed, bits=self.bits)
+
+    def __lshift__(self, other):
+        return NBitInteger(self.number << other, signed=self.signed, bits=self.bits)
+
+    def __rshift__(self, other):
+        return NBitInteger(self.number >> other, signed=self.signed, bits=self.bits)
+
+    def __and__(self, other):
+        return NBitInteger(self.number & other, signed=self.signed, bits=self.bits)
+
+    def __xor__(self, other):
+        return NBitInteger(self.number ^ other, signed=self.signed, bits=self.bits)
+
+    def __or__(self, other):
+        return NBitInteger(self.number | other, signed=self.signed, bits=self.bits)
+
+    def __radd__(self, other):
+        return NBitInteger(self.number + other, signed=self.signed, bits=self.bits)
+
+    def __rsub__(self, other):
+        return NBitInteger(self.number - other, signed=self.signed, bits=self.bits)
+
+    def __rmul__(self, other):
+        return NBitInteger(self.number * other, signed=self.signed, bits=self.bits)
+
+    def __rfloordiv__(self, other):
+        return NBitInteger(self.number // other, signed=self.signed, bits=self.bits)
+
+    def __rtruediv__(self, other):
+        return NBitInteger(self.number / other, signed=self.signed, bits=self.bits)
+
+    def __rmod__(self, other):
+        return NBitInteger(self.number % other, signed=self.signed, bits=self.bits)
+
+    def __rpow__(self, power):
+        return NBitInteger(self.number ** power, signed=self.signed, bits=self.bits)
+
+    def __rlshift__(self, other):
+        return NBitInteger(self.number << other, signed=self.signed, bits=self.bits)
+
+    def __rrshift__(self, other):
+        return NBitInteger(self.number >> other, signed=self.signed, bits=self.bits)
+
+    def __rand__(self, other):
+        return NBitInteger(self.number & other, signed=self.signed, bits=self.bits)
+
+    def __rxor__(self, other):
+        return NBitInteger(self.number ^ other, signed=self.signed, bits=self.bits)
+
+    def __ror__(self, other):
+        return NBitInteger(self.number | other, signed=self.signed, bits=self.bits)
+
+    def __neg__(self):
+        if self.signed:
+            return NBitInteger(-self.number, signed=self.signed, bits=self.bits)
+        else:
+            if -self.number < 0:
+                return NBitInteger(-self.number, signed=True, bits=self.bits)
+
+    def __pos__(self):
+        return NBitInteger(+self.number, signed=self.signed, bits=self.bits)
+
+    def __abs__(self):
+        return NBitInteger(abs(self.number), signed=self.signed, bits=self.bits)
+
+    def __invert__(self):
+        return NBitInteger(~self.number, signed=self.signed, bits=self.bits)
+
+    def __float__(self):
+        return float(self._number)
+
+    def __complex__(self):
+        return complex(self._number)
