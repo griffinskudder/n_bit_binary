@@ -132,6 +132,32 @@ class NBitInteger(SupportsInt):
             raise OverflowError
         self._signed = value
 
+    def append(self, value):
+        """
+        Append a new least-significant bit to the integer.
+        :param value:
+        :return:
+        """
+        self.bits += 1
+        self._number <<= 1
+        if value:
+            self._set_bit(0)
+        else:
+            self._clear_bit(0)
+
+    def prepend(self, value):
+        """
+        Prepend a new most-significant bit to the integer.
+        :param value:
+        :return:
+        """
+        self.bits += 1
+        if value:
+            self._set_bit(self.bits - 1)
+        else:
+            self._clear_bit(self.bits - 1)
+
+
     def _set_bit(self, offset: int):
         """
         Set bit at position offset.
@@ -179,13 +205,6 @@ class NBitInteger(SupportsInt):
             raise ValueError(
                 "This slice {key} would return an integer with 0 bits.".format(
                     key=str(key)))
-
-        if (key.start < 0 and self.bits - key.start < 0) or (
-                key.start > self.bits - 1
-        ) or (
-                key.stop < 0 and self.bits - key.stop < 0
-        ) or key.stop > self.bits:
-            raise IndexError
 
         return_value = NBitInteger(0, 1)
         first_run = True
