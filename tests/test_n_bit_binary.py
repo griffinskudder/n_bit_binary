@@ -1,3 +1,5 @@
+from multiprocessing.managers import Value
+from stringprep import b1_set
 from typing import assert_type
 
 import pytest
@@ -40,10 +42,19 @@ def test_unsigned_slicing():
     n[0] = True
     assert n == 5 + 2**15
 
+def test_set_slice():
+    n = NBitInteger(5, 16)
+    n[0:16] = False
+    assert n == 0
+    n[0:len(n)] = True
+    assert n == -1
+
 def test_slicing_out_of_range():
     with pytest.raises(IndexError):
         n = NBitInteger(5, 16, signed=True)
         n[16] = False
+    with pytest.raises(ValueError):
+        n["a"] = False
 
 def test_negative_index():
     n = NBitInteger(5, 16, signed=True)
@@ -116,3 +127,47 @@ def test_subtraction():
     new_val = n - 5
     assert new_val == 0
     assert_type(new_val, NBitInteger)
+
+def test_getting_slice():
+    n = NBitInteger(254, 8, signed=False)
+    assert n[-1] == 0
+    assert_type(n[-1], NBitInteger)
+    assert n[0] == -1
+    assert_type(n[0], NBitInteger)
+    assert n[0:1] == -1
+    assert_type(n[0:1], NBitInteger)
+    assert n[0:2] == 3
+    assert_type(n[0:2], NBitInteger)
+    assert n[6:8] == 6
+    assert_type(n[6:8], NBitInteger)
+
+def test_slice_boundaries():
+    n = NBitInteger(254, 8, signed=False)
+    with pytest.raises(ValueError):
+        n["a"]
+    with pytest.raises(ValueError):
+        n[:-0]
+    with pytest.raises(ValueError):
+        n[8::]
+
+def test_repr():
+    n = NBitInteger(5, 16, signed=True)
+    n1 = eval(repr(n))
+    assert n == n1
+    assert n.bits == n1.bits
+    assert n.signed == n1.signed
+
+def test_str():
+    n = NBitInteger(5, 16, signed=True)
+    assert str(n) == "5"
+
+def test_bool():
+    n = NBitInteger(5, 16, signed=True)
+    assert bool(n)
+    n = NBitInteger(0, 16, signed=False)
+    assert not bool(n)
+
+def test_multiply():
+    n = NBitInteger(5, 16, signed=True)
+    assert n * 5 == 25
+    assert_type(n * 5, NBitInteger)
