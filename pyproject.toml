@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project]
+name = "n_bit_binary"
+version = "0.1.0"
+authors = [
+    {name="Griffin Skudder", email="griffin@skudder.co.nz"}
+]
+description = "A package for working with integers as binary arrays"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache License 2.0",
+    "Operating System :: OS Independent",
+]
+[project.urls]
+Homepage = "https://github.com/griffinskudder/n_bit_binary"
+Issues = "https://github.com/griffinskudder/n_bit_binary/issues"
